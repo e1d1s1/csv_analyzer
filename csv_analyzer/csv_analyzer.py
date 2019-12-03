@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import matplotlib.pyplot as plotter
 import matplotlib.colors as mcolors
