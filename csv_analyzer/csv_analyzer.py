@@ -15,12 +15,13 @@ import os
 
 line_cnt = 0
 legend_keys = []
+xaxis_label = ""
 
 parser = argparse.ArgumentParser(description='Plot collection of variables for a csv file.')
 parser.add_argument('-f', '--file', metavar='FILE', type=str,
                     help='CSV file to plot')
 parser.add_argument('-x', '--xaxis', metavar='X_COL_NAME', type=str,
-                    help='column name of x-axis', default="logger_time")
+                    help='column name of x-axis')
 parser.add_argument('columns_plot1', metavar='COL_NAME', type=str, nargs='+',
                     help='column name(s) of the plot items')
 parser.add_argument('-r', '--rowstart', metavar='STARTROW', type=int,
@@ -48,9 +49,14 @@ parser.add_argument('--colorbyplot', action='store_true',
 
 args = parser.parse_args()
 
-if len(args.file) == 0 or len(args.xaxis) == 0 or len(args.columns_plot1) == 0:
+if len(args.file) == 0 or len(args.columns_plot1) == 0:
     parser.print_help()
     exit(1)
+    
+if not args.xaxis is None and len(args.xaxis) != 0:
+    xaxis_label = args.xaxis
+else:
+    xaxis_label = "auto"
 
 def add_line(axis, key, lines_dict, color_dict):
     global line_cnt
@@ -172,7 +178,7 @@ def fit_plot(axis, lines, ydata_dict):
 
     axis.set_ylim(min_y, max_y)
     axis.set_xlim(min_x, max_x)
-    axis.set_xlabel(args.xaxis)
+    axis.set_xlabel(xaxis_label)
     axis.grid(True)
 
 
@@ -186,7 +192,7 @@ def get_csv_data(filename, columns, xaxis_name, rowstart, rowend):
 
     row_count = 0
     row_num = 0
-    idx_xaxis = 0
+    idx_xaxis = -1
 
     with open(filename, 'r') as csvfile:
         row_count = sum(1 for row in csvfile)
@@ -214,10 +220,13 @@ def get_csv_data(filename, columns, xaxis_name, rowstart, rowend):
                 for ele in row:
                     for idx, name in headers.items():
                         if idx == i:
-                            data[name].append(float(ele))
+                            data[name].append(float(ele))                    
                     if i == idx_xaxis:
                         xaxis.append(float(ele))
                     i += 1
+                    
+            if idx_xaxis < 0 and row_num > 0:
+                xaxis.append(float(row_num - 1))
 
             row_num += 1
 
@@ -267,7 +276,7 @@ else:
 
     try:
         print ('reading CSV data')
-        dict_data, x_axis = get_csv_data(args.file, args.columns_plot1, args.xaxis, args.rowstart, args.rowend)
+        dict_data, x_axis = get_csv_data(args.file, args.columns_plot1, xaxis_label, args.rowstart, args.rowend)
 
     except IOError as e:
         print ("I/O error({0}): {1}".format(e.errno, e.strerror))
