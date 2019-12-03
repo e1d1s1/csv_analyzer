@@ -56,7 +56,13 @@ if len(args.file) == 0 or len(args.columns_plot1) == 0:
 if not args.xaxis is None and len(args.xaxis) != 0:
     xaxis_label = args.xaxis
 else:
-    xaxis_label = "auto"
+    i = 0
+    for key in args.columns_plot1:
+        if i % 2 == 0:
+            if len(xaxis_label) > 0: 
+                xaxis_label += ","
+            xaxis_label += key
+        i += 1
 
 def add_line(axis, key, lines_dict, color_dict):
     global line_cnt
@@ -381,7 +387,7 @@ axis_1 = None
 dict_colors = None
 
 if doshow:
-    plotter.show(True)
+    plotter.show(block=True)
 
 exit(0)
 

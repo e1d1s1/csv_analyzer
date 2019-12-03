@@ -89,6 +89,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+csv_analyzer/bin/
+csv_analyzer/include/
 
 # Spyder project settings
 .spyderproject
@@ -106,4 +108,9 @@ venv.bak/
 #generated test data
 test/path.csv
 test/pyautogui
+test/csvsession.pickle
+
+#VS Code
+.vscode
+
 
