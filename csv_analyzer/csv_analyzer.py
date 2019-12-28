@@ -307,24 +307,44 @@ if len(args.filter) > 0:
     qrys = qry.split("WHERE")
     if len(qrys) == 2:
         plot_list = qrys[0]
-        filter_expression = qrys[1]
 
         plot_list = plot_list.replace("SELECT", "")
         plot_list = plot_list.replace(" ", "")
         plots = plot_list.split(',')
+        tokens = qrys[1].split(' ')
         replacements = {}
 
         # build up the array query
-        for key_name in dict_data.keys():      
-            found = filter_expression.find(key_name)      
-            if found >= 0:
-                replacements[found] = "np.array(dict_data[\"" + key_name + "\"])"
-                
+        for key_name in dict_data.keys():  
+            found_idx = 0    
+            for token in tokens:                
+                if token == key_name:
+                     replacements[found_idx] = "np.array(dict_data[\"" + key_name + "\"])"
+                found_idx+=1
+               
+        filter_expression = ""
         for replacement in replacements:
-            filter_expression = filter_expression[:(replacement - 1)] + replacements[replacement] + filter_expression[(replacement + 1):]
+            tokens[replacement] = replacements[replacement]        
+        
+        for token in tokens:
+            filter_expression += token + " "
 
-        filter_expression = filter_expression.replace("AND", "&")
-        filter_expression = filter_expression.replace("OR", "|")
+        tokens = filter_expression.split("AND")
+        if len(tokens) > 1:
+            filter_expression = ""
+            for i in range(len(tokens)):
+                filter_expression += "(" + tokens[i] + ") "
+                if i < len(tokens) - 1:
+                    filter_expression += " & "
+
+        tokens = filter_expression.split("OR")
+        if len(tokens) > 1:
+            filter_expression = ""
+            for i in range(len(tokens)):
+                filter_expression += "(" + tokens[i]+ ") "
+                if i < len(tokens) - 1:
+                    filter_expression += " | "
+
         exe_str = "res = np.where(" + filter_expression + ")"
     else:
         exe_str = "res = " + args.filter
