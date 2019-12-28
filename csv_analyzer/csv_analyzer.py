@@ -22,7 +22,7 @@ parser.add_argument('-f', '--file', metavar='FILE', type=str,
                     help='CSV file to plot')
 parser.add_argument('-x', '--xaxis', metavar='X_COL_NAME', type=str,
                     help='column name of x-axis')
-parser.add_argument('columns_plot1', metavar='COL_NAME', type=str, nargs='+',
+parser.add_argument('columns_plot', metavar='COL_NAME', type=str, nargs='+',
                     help='column name(s) of the plot items')
 parser.add_argument('-r', '--rowstart', metavar='STARTROW', type=int,
                     help='row start number', default=0)
@@ -30,12 +30,8 @@ parser.add_argument('-e', '--rowend', metavar='ENDROW', type=int,
                     help='row end number (0 to end of file)', default=0)
 parser.add_argument('-t', '--filter', metavar='expression', type=str,
                     help='filtering expression', default='')
-parser.add_argument('-d', '--hideplot1', action='store_true',
-                    help='hides the main plot')
 parser.add_argument('-i', '--title', type=str,
-                    help='title of plot 1', default='')
-parser.add_argument('-l', '--filtertitle', type=str,
-                    help='title of the filter plot', default='')
+                    help='title of plot', default='')
 parser.add_argument('-s', '--sessionstart', action='store_true',
                     help='starts a new session so we only load data/assign colors once', default='')
 parser.add_argument('-c', '--sessioncontinue', action='store_true',
@@ -49,7 +45,7 @@ parser.add_argument('--colorbyplot', action='store_true',
 
 args = parser.parse_args()
 
-if len(args.file) == 0 or len(args.columns_plot1) == 0:
+if len(args.file) == 0 or len(args.columns_plot) == 0:
     parser.print_help()
     exit(1)
     
@@ -57,7 +53,7 @@ if not args.xaxis is None and len(args.xaxis) != 0:
     xaxis_label = args.xaxis
 else:
     i = 0
-    for key in args.columns_plot1:
+    for key in args.columns_plot:
         if i % 2 == 0:
             if len(xaxis_label) > 0: 
                 xaxis_label += ","
@@ -85,7 +81,7 @@ def create_lines(axis, lines_dict, color_dict):
 
     line_cnt = 0
     i = 0
-    for key in args.columns_plot1:
+    for key in args.columns_plot:
         if not args.scatter or i % 2 != 0:
             add_line(axis, key, lines_dict, color_dict)
             legend_keys.append(key)
@@ -133,7 +129,7 @@ def assign_colors(color_dict):
 def fill_lines(lines_dict, ydata_dict):
     if args.scatter:
         i = 0
-        for key in args.columns_plot1:
+        for key in args.columns_plot:
             if i % 2 == 0:
                 xdata = ydata_dict[key]
                 lines_dict.pop(key)
@@ -162,7 +158,7 @@ def fit_plot(axis, lines, ydata_dict):
 
     if args.scatter:
         i = 0
-        for key in args.columns_plot1:
+        for key in args.columns_plot:
             if i % 2 == 0:
                 min_x = min(min_x, min(ydata_dict[key]))
                 max_x = max(max_x, max(ydata_dict[key]))
@@ -247,17 +243,12 @@ x_axis = []
 color_palette = []
 dict_colors = {}
 
-dict_filter_lines = {}
-dict_filter_data = {}
-
-for header in args.columns_plot1:
+for header in args.columns_plot:
     dict_lines[header] = None
     dict_colors[header] = ("black", 1)
 
 figure_1 = None
 axis_1 = None
-figure_filter = None
-axis_filter = None
 
 if args.sessioncontinue:
 
@@ -282,7 +273,7 @@ else:
 
     try:
         print ('reading CSV data')
-        dict_data, x_axis = get_csv_data(args.file, args.columns_plot1, xaxis_label, args.rowstart, args.rowend)
+        dict_data, x_axis = get_csv_data(args.file, args.columns_plot, xaxis_label, args.rowstart, args.rowend)
 
     except IOError as e:
         print ("I/O error({0}): {1}".format(e.errno, e.strerror))
@@ -293,24 +284,24 @@ else:
 
 doshow = False
 # fill the plot lines with the data
-if args.hideplot1 is False:
-    figure_1 = plotter.figure(1)
-    if len(args.title) > 0:
-        figure_1.suptitle(args.title)
-    axis_1 = figure_1.add_subplot(1, 1, 1)
-    create_lines(axis_1, dict_lines, dict_colors)
-    if fill_lines(dict_lines, dict_data):
-        fit_plot(axis_1, dict_lines, dict_data)
-        plotter.subplots_adjust(left=0.08, right=0.97, top=0.94, bottom=0.1)
-        legend_values = []
-        for key in legend_keys:
-            legend_values.append(dict_lines[key])
-        axis_1.legend(legend_values, legend_keys)
-        doshow = True
+figure_1 = plotter.figure(1)
+if len(args.title) > 0:
+    figure_1.suptitle(args.title)
+axis_1 = figure_1.add_subplot(1, 1, 1)
+create_lines(axis_1, dict_lines, dict_colors)
+if fill_lines(dict_lines, dict_data):
+    fit_plot(axis_1, dict_lines, dict_data)
+    plotter.subplots_adjust(left=0.08, right=0.97, top=0.94, bottom=0.1)
+    legend_values = []
+    for key in legend_keys:
+        legend_values.append(dict_lines[key])
+    axis_1.legend(legend_values, legend_keys)
+    doshow = True
 
 
-# filtering expression and additional plots
+# filtering expression and highlighting plot
 if len(args.filter) > 0:
+    dict_data[xaxis_label] = x_axis
     # find the WHERE
     qry = str(args.filter)
     qrys = qry.split("WHERE")
@@ -321,48 +312,43 @@ if len(args.filter) > 0:
         plot_list = plot_list.replace("SELECT", "")
         plot_list = plot_list.replace(" ", "")
         plots = plot_list.split(',')
+        replacements = {}
 
         # build up the array query
-        # replace column names with their dict entry
-        key_order = plots
-        for key_name in dict_data.keys():
-            if filter_expression.find(key_name) >= 0:
-                filter_expression = filter_expression.replace(key_name, "np.array(dict_data[\"" + key_name + "\"])")
-                if key_name not in plots:
-                    key_order.append(key_name)
-
-        for key_name in key_order:
-            dict_filter_lines[key_name] = None
+        for key_name in dict_data.keys():      
+            found = filter_expression.find(key_name)      
+            if found >= 0:
+                replacements[found] = "np.array(dict_data[\"" + key_name + "\"])"
+                
+        for replacement in replacements:
+            filter_expression = filter_expression[:(replacement - 1)] + replacements[replacement] + filter_expression[(replacement + 1):]
 
         filter_expression = filter_expression.replace("AND", "&")
         filter_expression = filter_expression.replace("OR", "|")
-
         exe_str = "res = np.where(" + filter_expression + ")"
-        res = []
-        exec(exe_str)
+    else:
+        exe_str = "res = " + args.filter
 
-        for key in key_order:
-            dict_filter_data[key] = []
+    res = []
+    exec(exe_str)
 
-            for j in range(0, len(x_axis)):
-                dict_filter_data[key].append(0)
+    if len(res) > 0:
+        arr = res[0]
+        last_idx = -2
+        min_x = np.amin(x_axis)
+        max_x = min_x
+        highlighted = False
+        for idx in arr:
+            if last_idx != idx - 1:
+                if min_x != max_x:
+                    plotter.axvspan(min_x, max_x, color='orange', alpha=0.5)
+                    highlighted = True
+                min_x = x_axis[idx]
+            max_x = x_axis[idx]
+            last_idx = idx
 
-            for arr in res:
-                for idx in arr:
-                    dict_filter_data[key][idx] = dict_data[key][idx]
-
-
-        figure_filter = plotter.figure(2)
-        if len(args.filtertitle) > 0:
-            figure_filter.suptitle(args.filtertitle)
-        axis_filter = figure_filter.add_subplot(1,1,1)
-
-        create_lines(axis_filter, dict_filter_lines, dict_colors)
-        if fill_lines(dict_filter_lines, dict_filter_data):
-            fit_plot(axis_filter, dict_filter_lines, dict_filter_data)
-            plotter.subplots_adjust(left=0.08, right=0.97, top=0.94, bottom=0.1)
-            axis_filter.legend(dict_filter_lines.values(), dict_filter_lines.keys())
-            doshow = True
+        if not highlighted and min_x != max_x:
+            plotter.axvspan(min_x, max_x, color='orange', alpha=0.5)
 
 
 if args.sessionstart:

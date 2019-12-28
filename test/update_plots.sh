@@ -8,7 +8,9 @@ fi
 rm -f csvsession.pickle
 python ../csv_analyzer/csv_analyzer.py t x y offx offy v -f $1 -x t --sessionstart --terminate --colorbyplot
 python ../csv_analyzer/csv_analyzer.py v -f $1 -x t --title "Mouse Speed" --sessioncontinue --colorbyplot &
-python ../csv_analyzer/csv_analyzer.py v x -f $1 -x t --hideplot1 --filter "SELECT x WHERE v > 150" --filtertitle "x when v > 150" --sessioncontinue --colorbyplot &
+python ../csv_analyzer/csv_analyzer.py v x -f $1 -x t --filter "SELECT x WHERE v > 150" --sessioncontinue --colorbyplot --title "x WHERE v > 150" &
+python ../csv_analyzer/csv_analyzer.py v x -f $1 -x t --filter "SELECT x WHERE t > 1.5" --sessioncontinue --colorbyplot --title "x WHERE t > 1.5" &
+python ../csv_analyzer/csv_analyzer.py v x -f $1 -x t --filter "np.where(np.array(dict_data[\"t\"]) > 1.50)" --sessioncontinue --colorbyplot --title "np.where(np.array(dict_data[\"t\"]) > 1.50)" &
 sleep 1
 python ../csv_analyzer/csv_analyzer.py x y offx offy --scatter -f $1 --title "Path Tracking" --sessioncontinue --colorbyplot &
 
