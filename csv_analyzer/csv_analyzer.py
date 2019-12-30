@@ -12,12 +12,6 @@
 #  Copyright (c) 2019 Eric D. Schmidt
 ######################################################################
 
-
-import matplotlib.pyplot as plotter
-import matplotlib.colors as mcolors
-from matplotlib.lines import Line2D
-import numpy as np
-
 import sys
 import argparse
 import random
@@ -25,6 +19,11 @@ import pickle
 import time
 import os
 #import csv
+
+import matplotlib.pyplot as plotter
+import matplotlib.colors as mcolors
+from matplotlib.lines import Line2D
+import numpy as np
 
 line_cnt = 0
 legend_keys = []
@@ -46,7 +45,7 @@ parser.add_argument('-t', '--filter', metavar='expression', type=str,
 parser.add_argument('-i', '--title', type=str,
                     help='title of plot', default='')
 parser.add_argument('-s', '--sessionstart', action='store_true',
-                    help='starts a new session so we only load data & assign colors once', 
+                    help='starts a new session so we only load data & assign colors once',
                     default='')
 parser.add_argument('-c', '--sessioncontinue', action='store_true',
                     help='Continues an existing session so we only load data & assign colors once',
@@ -70,7 +69,7 @@ else:
     col_cnt = 0
     for key in args.columns_plot:
         if col_cnt % 2 == 0:
-            if len(xaxis_label) > 0: 
+            if len(xaxis_label) > 0:
                 xaxis_label += ","
             xaxis_label += key
         col_cnt += 1
@@ -89,7 +88,7 @@ def add_line(axis, colname, lines_dict, color_dict):
         thickness = color_dict[colname][1]
     lines_dict[colname] = Line2D([], [], color=color_name, linewidth=thickness)
     axis.add_line(lines_dict[colname])
-    line_cnt+=1
+    line_cnt += 1
 
 def create_lines(axis, lines_dict, color_dict):
     '''depending on plot type adds a line and legend entry to plot'''
@@ -181,7 +180,7 @@ def fit_plot(axis, lines, ydata_dict):
             if i % 2 == 0:
                 min_x_axis = min(min_x_axis, min(ydata_dict[col]))
                 max_x_axis = max(max_x_axis, max(ydata_dict[col]))
-            i+=1
+            i += 1
     else:
         min_x_axis = x_axis[0]
         max_x_axis = x_axis[-1]
@@ -242,7 +241,7 @@ def get_csv_data(filename, columns, xaxis_name, rowstart, rowend):
                 for ele in row:
                     for col_idx, name in headers.items():
                         if col_idx == i:
-                            data[name].append(float(ele))                    
+                            data[name].append(float(ele))
                     if i == idx_xaxis:
                         xaxis.append(float(ele))
                     i += 1
@@ -272,7 +271,7 @@ axis_1 = None
 
 if args.sessioncontinue:
 
-    print ('restoring session data')
+    print('restoring session data')
     try:
       # check if file is still being used
         while os.path.exists('csvsession.pickle.lock'):
@@ -293,7 +292,7 @@ else:
     assign_colors(dict_colors)
 
     try:
-        print ('reading CSV data')
+        print('reading CSV data')
         dict_data, x_axis = get_csv_data(args.file, args.columns_plot,
                                          xaxis_label, args.rowstart, args.rowend)
 
@@ -301,7 +300,7 @@ else:
         print("I/O error({0}): {1}".format(err.errno, err.strerror))
         exit(1)
     except:  # handle other exceptions
-        print ("Unexpected error:", sys.exc_info()[0])
+        print("Unexpected error:", sys.exc_info()[0])
         exit(1)
 
 doshow = False
@@ -337,16 +336,16 @@ if len(args.filter) > 0:
         replacements = {}
 
         # build up the array query
-        for key_name in dict_data.keys():  
-            found_idx = 0    
-            for token in tokens:                
+        for key_name in dict_data.keys():
+            found_idx = 0
+            for token in tokens:
                 if token == key_name:
                     replacements[found_idx] = "np.array(dict_data[\"" + key_name + "\"])"
                 found_idx += 1
 
         filter_expression = ""
         for replacement in replacements:
-            tokens[replacement] = replacements[replacement]        
+            tokens[replacement] = replacements[replacement]
 
         for token in tokens:
             filter_expression += token + " "
