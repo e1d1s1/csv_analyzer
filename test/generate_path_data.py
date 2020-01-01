@@ -11,6 +11,8 @@ DURATION = 5
 start_time = time.time()
 
 parser = argparse.ArgumentParser(description='Generate some CSV data from mouse movement')
+parser.add_argument('-f', '--outputfile', metavar='OUTPUT', type=str,
+                    default="path.csv", help='output file (path.csv)')
 parser.add_argument('-x', '--offsetx', metavar='X_OFFSET', type=int,
                     default=OFFSET_X, help='x-offset')
 parser.add_argument('-y', '--offsety', metavar='Y_OFFSET', type=int,
@@ -20,7 +22,7 @@ parser.add_argument('-c', '--duration', metavar='DURATION_S', type=int,
 
 args = parser.parse_args()
 
-with open("path.csv", 'w') as f:
+with open(args.outputfile, 'w') as f:
     f.write("t,x,y,offx,offy,v\n")
     t = time.time() - start_time
 
