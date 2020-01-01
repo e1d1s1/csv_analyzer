@@ -18,12 +18,88 @@ import random
 import pickle
 import time
 import os
-#import csv
+import csv
 
 import matplotlib.pyplot as plotter
 import matplotlib.colors as mcolors
 from matplotlib.lines import Line2D
 import numpy as np
+
+class BigCSVReader:
+    def __init__(self):
+        self.headers = {}
+        self.data = {}
+        self.xaxis = []
+        self.idx_xaxis = -1
+
+    def __read_headers(self, row, columns, xaxis_name):
+        i = 0
+        for ele in row:
+            if ele in columns:
+                self.headers[i] = ele
+            if ele == xaxis_name:
+                self.idx_xaxis = i
+            i += 1
+
+    def __read_row(self, row, row_num):
+        i = 0
+        for ele in row:
+            for col_idx, name in self.headers.items():
+                if col_idx == i:
+                    self.data[name].append(float(ele))
+            if i == self.idx_xaxis:
+                self.xaxis.append(float(ele))
+            i += 1
+
+        if self.idx_xaxis < 0:
+            self.xaxis.append(float(row_num - 1))
+
+    def __process_row_data(self, row, row_num, columns, xaxis_name, rowstart, rowend, row_count):
+        if rowend > 0 and row_num > rowend:
+            return False
+
+        if row_num == 0:
+            self.__read_headers(row, columns, xaxis_name)
+        elif row_num >= rowstart:
+            self.__read_row(row, row_num)
+
+        if row_num % 100000 == 0:
+            print("processed %i rows of %i" % (row_num, row_count))
+
+        return True
+
+    def get_csv_data(self, filename, columns, xaxis_name, rowstart, rowend, rawmode=False):
+        '''parse the raw CSV data from the source file using raw file I/O'''
+
+        for col in columns:
+            self.data[col] = []
+
+        row_count = 0
+        row_num = 0
+
+        with open(filename, 'r') as csvfile:
+            row_count = sum(1 for row in csvfile)
+        if rowstart != rowend:
+            row_count = min(row_count, rowend - rowstart)
+
+        with open(filename, 'r') as csvfile:
+            # fails on big files ??
+            if not rawmode:
+                reader = csv.reader(csvfile)
+                for row in reader:
+                    if not self.__process_row_data(row, row_num, columns, xaxis_name, rowstart, rowend, row_count):
+                        break
+                    row_num += 1
+            else:
+                lines = (line.rstrip() for line in csvfile)
+                for rawrow in lines:
+                    row_array = rawrow.split(',')
+                    if not self.__process_row_data(row_array, row_num, columns, xaxis_name, rowstart, rowend, row_count):
+                        break
+                    row_num += 1
+
+        print("CSV loading complete")
+        return self.data, self.xaxis
 
 class CSVAnalyzer:
     def __init__(self, columns, xaxis_label, colorbyplot, scatterplot):
@@ -42,12 +118,12 @@ class CSVAnalyzer:
         self.figure_1 = None
         self.axis_1 = None
 
-    def load_data(self, filename, rowstart, rowend, restore_pickle):
+    def load_data(self, filename, rowstart, rowend, restore_pickle, rawreadmode=False):
         if restore_pickle:
             self.restore_data()
         else:
             self.dict_data, self.x_axis = self.get_csv_data(
-                filename, self.columns_plot, self.xaxis_label, rowstart, rowend)
+                filename, self.columns_plot, self.xaxis_label, rowstart, rowend, rawreadmode)
 
     def get_data(self):
         return self.dict_data, self.x_axis
@@ -304,59 +380,10 @@ class CSVAnalyzer:
         axis.grid(True)
 
 
-    def get_csv_data(self, filename, columns, xaxis_name, rowstart, rowend):
+    def get_csv_data(self, filename, columns, xaxis_name, rowstart, rowend, rawreadmode):
         '''parse the raw CSV data from the source file'''
-        headers = {}
-        data = {}
-        xaxis = []
-
-        for col in columns:
-            data[col] = []
-
-        row_count = 0
-        row_num = 0
-        idx_xaxis = -1
-
-        with open(filename, 'r') as csvfile:
-            row_count = sum(1 for row in csvfile)
-
-        with open(filename, 'r') as csvfile:
-            # fails on big files
-            #reader = csv.reader(csvfile)
-            lines = (line.rstrip() for line in csvfile)
-            for rawrow in lines:
-            # for row in reader:
-                row = rawrow.split(',')
-                if rowend > 0 and row_num > rowend:
-                    break
-
-                if row_num == 0:
-                    i = 0
-                    for ele in row:
-                        if ele in columns:
-                            headers[i] = ele
-                        if ele == xaxis_name:
-                            idx_xaxis = i
-                        i += 1
-                elif row_num >= rowstart:
-                    i = 0
-                    for ele in row:
-                        for col_idx, name in headers.items():
-                            if col_idx == i:
-                                data[name].append(float(ele))
-                        if i == idx_xaxis:
-                            xaxis.append(float(ele))
-                        i += 1
-
-                if idx_xaxis < 0 and row_num > 0:
-                    xaxis.append(float(row_num - 1))
-
-                row_num += 1
-
-                if row_num % 100000 == 0:
-                    print("processed %i rows of %i" % (row_num, row_count))
-
-        return data, xaxis
+        reader = BigCSVReader()
+        return reader.get_csv_data(filename, columns, xaxis_name, rowstart, rowend, rawreadmode)
 
 def main():
     parser = argparse.ArgumentParser(description='Plot collection of variables for a csv file.')

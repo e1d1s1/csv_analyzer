@@ -17,7 +17,7 @@ parser.add_argument('-x', '--offsetx', metavar='X_OFFSET', type=int,
                     default=OFFSET_X, help='x-offset')
 parser.add_argument('-y', '--offsety', metavar='Y_OFFSET', type=int,
                     default=OFFSET_Y, help='y-offset')
-parser.add_argument('-c', '--duration', metavar='DURATION_S', type=int,
+parser.add_argument('-d', '--duration', metavar='DURATION_S', type=int,
                     default=DURATION, help='y-offset')
 
 args = parser.parse_args()
