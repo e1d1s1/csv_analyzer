@@ -35,6 +35,7 @@ Very fast and scriptable CSV plotting and analysis tool in Python
 	  --colorbyplot         Keep plot color scheme consistent by plot order
 
 ###Examples
+
 Given a CSV file named "path.csv" with colums t, x, y, v
 
 Timeseries Plot of v vs t:
@@ -52,7 +53,7 @@ Highlight values where v > 150 (psuedo-SQL):
 	
 Highlight values where t > 1.5 (numpy where):
 
-	./csv_analyzer.py t x v -f path.csv --filter "numpy.where(numpy.array(dict_data[\"t\"]) > 1.50)" --title "numpy.where(numpy.array(dict_data[\"t\"]) > 1.50""
+	./csv_analyzer.py t x v -f path.csv --filter "numpy.where(numpy.array(dict_data[\"t\"]) > 1.50)" --title "numpy.where(numpy.array(dict_data[\"t\"]) > 1.50"
 	
 ![](doc/images/numpy_where.png) 
 	
@@ -62,4 +63,4 @@ Show a scatter plot of x vs y (path plot):
 	
 ![](doc/images/path_tracking.png) 
 	
-You can generate multiple plots from the same data and load the CSV file only a single time by using --sessionstart and --sessioncontinue. See the example in the "update_plots.sh" script within the test directory for an example. Intermediate calls to the script will load a temporary pickle file to save processing time.
+You can generate multiple plots from the same data and load the CSV file only a single time by using the switches "--sessionstart" and "--sessioncontinue. See the example in the "update_plots.sh" script within the test directory for an example. Intermediate calls to the script will load a temporary pickle file to save processing time.
