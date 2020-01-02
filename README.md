@@ -34,7 +34,7 @@ Very fast and scriptable CSV plotting and analysis tool in Python
 	  --scatter             Create scatter plots from pairs of header names
 	  --colorbyplot         Keep plot color scheme consistent by plot order
 
-###Examples
+### Examples
 
 Given a CSV file named "path.csv" with colums t, x, y, v
 
