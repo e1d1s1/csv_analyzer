@@ -37,20 +37,29 @@ Very fast and scriptable CSV plotting and analysis tool in Python
 ###Examples
 Given a CSV file named "path.csv" with colums t, x, y, v
 
-Timeseries Plot of x vs t:
+Timeseries Plot of v vs t:
 
-	./csv_analyzer.py t x -f path.csv
+	./csv_analyzer.py t v -f path.csv --title "Mouse Speed"
+	
+![](doc/images/mouse_speed.png) 
+
 	
 Highlight values where v > 150 (psuedo-SQL):
 
-	./csv_analyzer.py t x v -f path.csv --filter "SELECT x WHERE v > 150"
+	./csv_analyzer.py t x v -f path.csv --filter "SELECT x WHERE v > 150" --title "x WHERE v > 150"
 	
-Highlight values where v > 150 (numpy where):
+![](doc/images/x_where_v_gt_150.png) 
+	
+Highlight values where t > 1.5 (numpy where):
 
-	./csv_analyzer.py t x v -f path.csv --filter "numpy.where(numpy.array(dict_data[\"v\"]) > 150)"
+	./csv_analyzer.py t x v -f path.csv --filter "numpy.where(numpy.array(dict_data[\"t\"]) > 1.50)" --title "numpy.where(numpy.array(dict_data[\"t\"]) > 1.50""
+	
+![](doc/images/numpy_where.png) 
 	
 Show a scatter plot of x vs y (path plot):
 
 	./csv_analyzer.py x y -f path.csv --scatter
 	
-Generate multiple plots from the same data and load the CSV file only a single time by using --sessionstart and --sessioncontinue. See the example in the "update_plots.sh" script within the test folder for an example. Intermediate calls to the script will load a temporary pickle file to save processing time.
+![](doc/images/path_tracking.png) 
+	
+You can generate multiple plots from the same data and load the CSV file only a single time by using --sessionstart and --sessioncontinue. See the example in the "update_plots.sh" script within the test directory for an example. Intermediate calls to the script will load a temporary pickle file to save processing time.
