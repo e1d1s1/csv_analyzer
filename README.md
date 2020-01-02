@@ -1,4 +1,4 @@
-## CSV Analyzer
+﻿## CSV Analyzer
 Very fast and scriptable CSV plotting and analysis tool in Python
 
 	usage: csv_analyzer.py [-h] [-f FILE] [-x X_COL_NAME] [-r STARTROW]
@@ -36,7 +36,7 @@ Very fast and scriptable CSV plotting and analysis tool in Python
 
 ### Examples
 
-Given a CSV file named "path.csv" with colums t, x, y, v
+Given a CSV file named "path.csv" with columns t, x, y, v
 
 Timeseries Plot of v vs t:
 
@@ -44,7 +44,7 @@ Timeseries Plot of v vs t:
 	
 ![](doc/images/mouse_speed.png) 
 	
-Highlight values where v > 150 (psuedo-SQL):
+Highlight values where v > 150 (pseudo-SQL):
 
 	./csv_analyzer.py t x v -f path.csv --filter "SELECT x WHERE v > 150" --title "x WHERE v > 150"
 	

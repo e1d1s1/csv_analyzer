@@ -1,14 +1,14 @@
-##CSV Analyzer Overview
+﻿## CSV Analyzer Overview
 
-CSV Analyzer is a simple scriptable python tool for plotting comma seperated value data (CSV). It is primarly aimed at timeseries and scatter plots. You can create multiple plots from a single reading of a CSV file. This greatly speeds up the process for many use cases when dealing with very large data sets. In addition, plots can be hightlighted based on selection criteria, defined either by "psudeo-SQL" selection or numpy conditions.
+CSV Analyzer is a simple scriptable python tool for plotting comma separated value data (CSV). It is primarily aimed at timeseries and scatter plots. You can create multiple plots from a single reading of a CSV file. This greatly speeds up the process for many use cases when dealing with very large data sets. In addition, plots can be highlighted based on selection criteria, defined either by "pseudo-SQL" selection or numpy conditions.
 
-###How It Works
-CSV data is parsed into a dictionary of arrays.  Each array is generated from a column of CSV data indexed by its header label. Generally, the Pyhton "csv" module is used, but in the rare edge case where it may fail on extemely large files, a raw file parsing I/O is available. In the newer releases of Python, large file parsing seems to be less of an issue than it used to be when dealing with csv files on the order of mangitude of 100MB of text or more.
+### How It Works
+CSV data is parsed into a dictionary of arrays.  Each array is generated from a column of CSV data indexed by its header label. Generally, the Python "csv" module is used, but in the rare edge case where it may fail on extremely large files, a raw file parsing I/O is available. In the newer releases of Python, large file parsing seems to be less of an issue than it used to be when dealing with csv files on the order of magnitude of 100MB of text or more.
 
 When a csv file is designated for loading by calling the script with the "--sessionstart" switch, a pickle file of the data dictionary is cached for subsequent loading and use, facilitating extremely fast reloading on the next call. Subsequent script calls can then use the switch "--sessioncontinue" to load from that pickle file.
 
-###Highlighting and Selection
-Critical events can be highlighted in a plot via the "filter" switch. This allows one write psuedo-SQL style selections based on the header labels. For instance, given the CSV column headers of: t,x,y,velocity, if t is time, and defined as the x-axis for a timeseries, all the timepoints where the veolocity exceeded a particular value on a timeseries plot of "x vs t" may be highlighed with the psuedo-SQL "filter":
+### Highlighting and Selection
+Critical events can be highlighted in a plot via the "filter" switch. This allows one to write psuedo-SQL style selections based on the CSV header labels. For instance, given the CSV headers of: t,x,y,velocity, if t is time, and defined as the x-axis for a timeseries, all the time-points where the velocity exceeded a particular value on a timeseries plot of "x vs t" may be highlighted with the pseudo-SQL "filter":
 
 	"SELECT x WHERE v > 150"
 
@@ -16,13 +16,13 @@ Critical events can be highlighted in a plot via the "filter" switch. This allow
 	
 	"numpy.where(numpy.array(dict_data[\"v\"]) > 150)"
 
-The psuedo-SQL is simply translated to the appropriate numpy syntax and the final filtering code is wrapped into the runtime execution call of:
+The pseudo-SQL is simply translated to the appropriate numpy syntax and the final filtering code is wrapped into the run-time execution call of:
 	
 	"res  = " + filterstring
 
 The timeseries indexes of the returned data are marked for highlighting in the output plot. Matplotlib is used for generating all plots.
 
-###Examples of Usage
+### Useage
 usage: csv_analyzer.py [-h] [-f FILE] [-x X_COL_NAME] [-r STARTROW]
 	                       [-e ENDROW] [-t expression] [-i TITLE] [-s] [-c] [-m]
 	                       [--scatter] [--colorbyplot]
@@ -57,17 +57,17 @@ usage: csv_analyzer.py [-h] [-f FILE] [-x X_COL_NAME] [-r STARTROW]
 	  --colorbyplot         Keep plot color scheme consistent by plot order
 
 
-###Examples
+### Real Examples
 
-Given a CSV file named "path.csv" with colums t, x, y, v, offx, offy
+Given a CSV file named "path.csv" with columns t, x, y, v, offx, offy
 
-Timeseries Plot of v vs t:
+Timeseries Plot of v vs t. Note that the x-axis "t" is the first header passed:
 
 	./csv_analyzer.py t v -f path.csv --title "Mouse Speed"
 	
 ![](images/mouse_speed.png) 
 	
-Highlight x-axis timestamps where v > 150 and draw x as solid, other lines dotted (psuedo-SQL):
+Highlight x-axis timestamps where v > 150 and draw x as solid, other lines dotted (pseudo-SQL):
 
 	./csv_analyzer.py t x v -f path.csv --filter "SELECT x WHERE v > 150"  --title "x WHERE v > 150"
 	
@@ -91,7 +91,7 @@ Compare 2 scatter plots:
 	
 ![](images/path_tracking_compare.png) 
 	
-Generate multiple plots from the same data and load the CSV file only a single time by using the switches "--sessionstart" and "--sessioncontinue" at the first call and subsequent calls, respectively. See the example in the "update_plots.sh" script within the test folder for an example. Intermediate calls to the script will load a temporary pickle file to save processing time.
+You can generate multiple plots from the same data and load the CSV file only a single time by using the switches "--sessionstart" and "--sessioncontinue" at the first call and subsequent calls, respectively. See the example in the "update_plots.sh" script within the test directory for an example. Intermediate calls to the script will load a temporary pickle file to save processing time.
 
 ### Give it a Try
 
