@@ -22,6 +22,8 @@ parser.add_argument('-d', '--duration', metavar='DURATION_S', type=int,
 
 args = parser.parse_args()
 
+print("Move your mouse around for the next %i seconds\nCSV will be captured to %s" % (args.duration, args.outputfile))
+
 with open(args.outputfile, 'w') as f:
     f.write("t,x,y,offx,offy,v\n")
     t = time.time() - start_time

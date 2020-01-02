@@ -23,7 +23,7 @@ import csv
 import matplotlib.pyplot as plotter
 import matplotlib.colors as mcolors
 from matplotlib.lines import Line2D
-import numpy as np
+import numpy
 
 class BigCSVReader:
     def __init__(self):
@@ -129,7 +129,8 @@ class CSVAnalyzer:
         return self.dict_data, self.x_axis
             
     def plot(self, title, filterstring):
-        doplot = False
+        highlight_region = []
+        highlight_lines = []
 
         for header in self.columns_plot:
             self.dict_lines[header] = None
@@ -137,32 +138,23 @@ class CSVAnalyzer:
 
         self.__assign_colors(self.dict_colors)
 
-        # fill the plot lines with the data
-        figure_1 = plotter.figure(1)
-        if len(title) > 0:
-            figure_1.suptitle(title)
-        self.axis_1 = figure_1.add_subplot(1, 1, 1)
-        self.__create_lines(self.axis_1, self.dict_lines, self.dict_colors)
-        if self.__fill_lines(self.dict_lines, self.dict_data):
-            self.__fit_plot(self.axis_1, self.dict_lines, self.dict_data)
-            plotter.subplots_adjust(left=0.08, right=0.97, top=0.94, bottom=0.1)
-            legend_values = []
-            for key in self.legend_keys:
-                legend_values.append(self.dict_lines[key])
-            self.axis_1.legend(legend_values, self.legend_keys)
-            doplot = True
-
         # filtering expression and highlighting plot
-        if doplot and len(filterstring) > 0:
+        if len(filterstring) > 0:
             self.dict_data[self.xaxis_label] = self.x_axis
             # find the WHERE
             qry = str(filterstring)
             qrys = qry.split("WHERE")
             if len(qrys) == 2:
-                plot_list = qrys[0]
+                plot_list_str = qrys[0]
 
-                plot_list = plot_list.replace("SELECT", "")
-                plot_list = plot_list.replace(" ", "")
+                plot_list_str = plot_list_str.replace("SELECT", "")
+                plots = plot_list_str.replace(" ", "").split(",")
+                if len(plots) > 0 and plots[0] != "*":
+                    for plot in plots:
+                        highlight_lines.append(plot)
+                elif len(plots) == 1 and plots[0] == "*":
+                    highlight_lines = plots
+
                 tokens = qrys[1].split(' ')
                 replacements = {}
 
@@ -171,7 +163,7 @@ class CSVAnalyzer:
                     found_idx = 0
                     for token in tokens:
                         if token == key_name:
-                            replacements[found_idx] = "np.array(dict_data[\"" + key_name + "\"])"
+                            replacements[found_idx] = "numpy.array(dict_data[\"" + key_name + "\"])"
                         found_idx += 1
 
                 filter_expression = ""
@@ -197,10 +189,10 @@ class CSVAnalyzer:
                         if token_idx < len(tokens) - 1:
                             filter_expression += " | "
 
-                exe_str = "res = np.where(" + filter_expression + ")"
+                exe_str = "res = numpy.where(" + filter_expression + ")"
             else:
                 exe_str = "res = " + filterstring
-            
+
             ldict = {}
             gdict = globals()
             gdict["dict_data"] = self.dict_data
@@ -210,23 +202,39 @@ class CSVAnalyzer:
             if len(ldict["res"]) > 0:
                 arr = ldict["res"][0]
                 last_idx = -2
-                min_x = np.amin(self.x_axis)
+                min_x = numpy.amin(self.x_axis)
                 max_x = min_x
                 highlighted = False
                 for idx in arr:
                     if last_idx != idx - 1:
                         if min_x != max_x:
-                            plotter.axvspan(min_x, max_x, color='orange', alpha=0.5)
+                            highlight_region.append((min_x, max_x))
                             highlighted = True
                         min_x = self.x_axis[idx]
                     max_x = self.x_axis[idx]
                     last_idx = idx
 
                 if not highlighted and min_x != max_x:
-                    plotter.axvspan(min_x, max_x, color='orange', alpha=0.5)
-    
-        if doplot:
-            plotter.show(block=True)
+                    highlight_region.append((min_x, max_x))
+
+        # fill the plot lines with the data
+        figure_1 = plotter.figure(1)
+        if len(title) > 0:
+            figure_1.suptitle(title)
+        self.axis_1 = figure_1.add_subplot(1, 1, 1)
+        self.__create_lines(self.axis_1, self.dict_lines, self.dict_colors, highlight_lines)
+        if self.__fill_lines(self.dict_lines, self.dict_data):
+            self.__fit_plot(self.axis_1, self.dict_lines, self.dict_data)
+            plotter.subplots_adjust(left=0.08, right=0.97, top=0.94, bottom=0.1)
+            legend_values = []
+            for key in self.legend_keys:
+                legend_values.append(self.dict_lines[key])
+            self.axis_1.legend(legend_values, self.legend_keys)
+
+        for region in highlight_region:
+            plotter.axvspan(region[0], region[1], color='orange', alpha=0.5)
+
+        plotter.show(block=True)
 
 
     def restore_data(self):
@@ -255,7 +263,7 @@ class CSVAnalyzer:
         if os.path.exists('csvsession.pickle.lock'):
             os.remove('csvsession.pickle.lock')
 
-    def __add_line(self, axis, colname, lines_dict, color_dict):
+    def __add_line(self, axis, colname, lines_dict, color_dict, linestyle="-"):
         '''adds a line to the plot. Assigns color and style'''
 
         color_name = 'black'
@@ -266,18 +274,25 @@ class CSVAnalyzer:
         else:
             color_name = color_dict[colname][0]
             thickness = color_dict[colname][1]
-        lines_dict[colname] = Line2D([], [], color=color_name, linewidth=thickness)
+        lines_dict[colname] = Line2D([], [], color=color_name, linewidth=thickness, linestyle=linestyle)
         axis.add_line(lines_dict[colname])
         self.line_cnt += 1
 
-    def __create_lines(self, axis, lines_dict, color_dict):
+    def __create_lines(self, axis, lines_dict, color_dict, highlight_lines):
         '''depending on plot type adds a line and legend entry to plot'''
 
+        default_style = "-"
+        if len(highlight_lines) > 0:
+            default_style = ":"
         self.line_cnt = 0
         i = 0
         for col in self.columns_plot:
             if not self.scatter or i % 2 != 0:
-                self.__add_line(axis, col, lines_dict, color_dict)
+                linestyle = default_style
+                if col in highlight_lines:
+                    linestyle = "-"
+
+                self.__add_line(axis, col, lines_dict, color_dict, linestyle)
                 self.legend_keys.append(col)
             i += 1
 
@@ -390,7 +405,7 @@ def main():
     parser.add_argument('-f', '--file', metavar='FILE', type=str,
                         help='CSV file to plot')
     parser.add_argument('-x', '--xaxis', metavar='X_COL_NAME', type=str,
-                        help='column name of x-axis')
+                        help='column name of x-axis. Omission assumes first column name is x-axis')
     parser.add_argument('columns_plot', metavar='COL_NAME', type=str, nargs='+',
                         help='column name(s) of the plot items')
     parser.add_argument('-r', '--rowstart', metavar='STARTROW', type=int,
@@ -408,12 +423,14 @@ def main():
                         help='Continues an existing session so we only load data & assign colors once',
                         default=False)
     parser.add_argument('-m', '--terminate', action='store_true',
-                        help='Closes immediately after data load and session save',
+                        help='Closes immediately after data load and session save, no visual plotting',
                         default=False)
     parser.add_argument('--scatter', action='store_true',
-                        help='Create scatter plots from pairs of values', default=False)
+                        help='Create scatter plots from pairs of header names', default=False)
     parser.add_argument('--colorbyplot', action='store_true',
                         help='Keep plot color scheme consistent by plot order', default=False)
+    parser.add_argument('--rawparse', action='store_true',
+                        help='Parse CSV files using raw I/O rather than csv module', default=False)
 
     args = parser.parse_args()
     xaxis_label = ""
@@ -431,11 +448,17 @@ def main():
                 if len(xaxis_label) > 0:
                     xaxis_label += ","
                 xaxis_label += key
+                if not args.scatter:
+                    break
             col_cnt += 1
 
     try:
-        analyzer = CSVAnalyzer(args.columns_plot, xaxis_label, args.colorbyplot, args.scatter)
-        analyzer.load_data(args.file, args.rowstart, args.rowend, args.sessioncontinue)
+        columns = args.columns_plot
+        if not args.scatter and xaxis_label in columns:
+            columns.remove(xaxis_label)
+        analyzer = CSVAnalyzer(columns, xaxis_label, args.colorbyplot, args.scatter)
+        analyzer.load_data(args.file, args.rowstart, args.rowend,
+                           args.sessioncontinue, args.rawparse)
     except IOError as err:
         print("I/O error({0}): {1}".format(err.errno, err.strerror))
         exit(1)

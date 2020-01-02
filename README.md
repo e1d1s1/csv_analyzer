@@ -15,7 +15,8 @@ Very fast and scriptable CSV plotting and analysis tool in Python
 	  -h, --help            show this help message and exit
 	  -f FILE, --file FILE  CSV file to plot
 	  -x X_COL_NAME, --xaxis X_COL_NAME
-	                        column name of x-axis
+	                        column name of x-axis. Omission assumes first 
+	                        column name is x-axis
 	  -r STARTROW, --rowstart STARTROW
 	                        row start number
 	  -e ENDROW, --rowend ENDROW
@@ -29,8 +30,8 @@ Very fast and scriptable CSV plotting and analysis tool in Python
 	  -c, --sessioncontinue
 	                        Continues an existing session so we only load data &
 	                        assign colors once
-	  -m, --terminate       Closes immediately after data load and session save
-	  --scatter             Create scatter plots from pairs of values
+	  -m, --terminate       Closes immediately after data load and session save, no visual plotting
+	  --scatter             Create scatter plots from pairs of header names
 	  --colorbyplot         Keep plot color scheme consistent by plot order
 
 ###Examples
@@ -38,15 +39,15 @@ Given a CSV file named "path.csv" with colums t, x, y, v
 
 Timeseries Plot of x vs t:
 
-	./csv_analyzer.py t x -f path.csv -x t
+	./csv_analyzer.py t x -f path.csv
 	
 Highlight values where v > 150 (psuedo-SQL):
 
-	./csv_analyzer.py t x v -f path.csv -x t --filter "SELECT x WHERE v > 150"
+	./csv_analyzer.py t x v -f path.csv --filter "SELECT x WHERE v > 150"
 	
 Highlight values where v > 150 (numpy where):
 
-	./csv_analyzer.py t x v -f path.csv -x t --filter "np.where(np.array(dict_data[\"v\"]) > 150)"
+	./csv_analyzer.py t x v -f path.csv --filter "numpy.where(numpy.array(dict_data[\"v\"]) > 150)"
 	
 Show a scatter plot of x vs y (path plot):
 
