@@ -401,7 +401,7 @@ class CSVAnalyzer:
         return reader.get_csv_data(filename, columns, xaxis_name, rowstart, rowend, rawreadmode)
 
 def main():
-    parser = argparse.ArgumentParser(description='Plot collection of variables for a csv file.')
+    parser = argparse.ArgumentParser(description='Plot collection of variables from a csv file.')
     parser.add_argument('-f', '--file', metavar='FILE', type=str,
                         help='CSV file to plot', default='')
     parser.add_argument('-x', '--xaxis', metavar='X_COL_NAME', type=str,

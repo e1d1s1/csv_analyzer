@@ -6,7 +6,7 @@ Very fast and scriptable CSV plotting and analysis tool in Python
 	                       [--scatter] [--colorbyplot]
 	                       COL_NAME [COL_NAME ...]
 	
-	Plot collection of variables for a csv file.
+	Plot collection of variables from a csv file.
 	
 	positional arguments:
 	  COL_NAME              column name(s) of the plot items
