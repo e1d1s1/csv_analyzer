@@ -403,7 +403,7 @@ class CSVAnalyzer:
 def main():
     parser = argparse.ArgumentParser(description='Plot collection of variables for a csv file.')
     parser.add_argument('-f', '--file', metavar='FILE', type=str,
-                        help='CSV file to plot')
+                        help='CSV file to plot', default='')
     parser.add_argument('-x', '--xaxis', metavar='X_COL_NAME', type=str,
                         help='column name of x-axis. Omission assumes first column name is x-axis')
     parser.add_argument('columns_plot', metavar='COL_NAME', type=str, nargs='+',
@@ -435,7 +435,7 @@ def main():
     args = parser.parse_args()
     xaxis_label = ""
 
-    if len(args.file) == 0 or len(args.columns_plot) == 0:
+    if (len(args.file) == 0 and not args.sessioncontinue) or len(args.columns_plot) == 0:
         parser.print_help()
         exit(1)
 

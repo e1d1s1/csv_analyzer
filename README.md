@@ -43,7 +43,6 @@ Timeseries Plot of v vs t:
 	./csv_analyzer.py t v -f path.csv --title "Mouse Speed"
 	
 ![](doc/images/mouse_speed.png) 
-
 	
 Highlight values where v > 150 (psuedo-SQL):
 
@@ -59,8 +58,8 @@ Highlight values where t > 1.5 (numpy where):
 	
 Show a scatter plot of x vs y (path plot):
 
-	./csv_analyzer.py x y -f path.csv --scatter
+	./csv_analyzer.py x y -f path.csv --scatter --title "Path Tracking"
 	
 ![](doc/images/path_tracking.png) 
 	
-You can generate multiple plots from the same data and load the CSV file only a single time by using the switches "--sessionstart" and "--sessioncontinue. See the example in the "update_plots.sh" script within the test directory for an example. Intermediate calls to the script will load a temporary pickle file to save processing time.
+You can generate multiple plots from the same data and load the CSV file only a single time by using the switches "--sessionstart" and "--sessioncontinue" at the first call and subsequent calls, respectively. See the example in the "update_plots.sh" script within the test directory for an example. Intermediate calls to the script will load a temporary pickle file to save processing time.

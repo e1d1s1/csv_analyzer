@@ -1,11 +1,11 @@
 ##CSV Analyzer Overview
 
-CSV Analyzer is a simple scriptable python tool for plotting comma seperated value data (CSV). It is primarly aimed at timeseries and scatter plots. You can create multiple plots for a single reading of a CSV file. This greatly speeds up the process for many use cases. In addition, plots can be hightlighted based on selection criteria, defined either by "psudeo-SQL" selection or numpy conditions.
+CSV Analyzer is a simple scriptable python tool for plotting comma seperated value data (CSV). It is primarly aimed at timeseries and scatter plots. You can create multiple plots from a single reading of a CSV file. This greatly speeds up the process for many use cases when dealing with very large data sets. In addition, plots can be hightlighted based on selection criteria, defined either by "psudeo-SQL" selection or numpy conditions.
 
 ###How It Works
-CSV data is parsed into a dictionary of arrays.  Each array is generated from a column of CSV data indexed by its header label. Generally, the Pyhton "csv" module is used, but in the rare edge case where it may fail on extemely large files, a raw file parsing I/O is available. In the latest release of Python, large file parsing seems to be less of an issue than it used to be when dealing with csv files on the order of mangitude of 100MB of text or more.
+CSV data is parsed into a dictionary of arrays.  Each array is generated from a column of CSV data indexed by its header label. Generally, the Pyhton "csv" module is used, but in the rare edge case where it may fail on extemely large files, a raw file parsing I/O is available. In the newer releases of Python, large file parsing seems to be less of an issue than it used to be when dealing with csv files on the order of mangitude of 100MB of text or more.
 
-When a csv file is designated for loading by calling the script with the "sessionstart" switch, a pickle file of the data dictionary is cached for subsequent loading and use, facilitating extremely fast reloading on the next call. Subsequent script calls can then use the switch "sessioncontinue" to load from that pickle file.
+When a csv file is designated for loading by calling the script with the "--sessionstart" switch, a pickle file of the data dictionary is cached for subsequent loading and use, facilitating extremely fast reloading on the next call. Subsequent script calls can then use the switch "--sessioncontinue" to load from that pickle file.
 
 ###Highlighting and Selection
 Critical events can be highlighted in a plot via the "filter" switch. This allows one write psuedo-SQL style selections based on the header labels. For instance, given the CSV column headers of: t,x,y,velocity, if t is time, and defined as the x-axis for a timeseries, all the timepoints where the veolocity exceeded a particular value on a timeseries plot of "x vs t" may be highlighed with the psuedo-SQL "filter":
@@ -56,29 +56,44 @@ usage: csv_analyzer.py [-h] [-f FILE] [-x X_COL_NAME] [-r STARTROW]
 	  --scatter             Create scatter plots from pairs of header names
 	  --colorbyplot         Keep plot color scheme consistent by plot order
 
+
 ###Examples
 
-Given a CSV file named "path.csv" with colums t, x, y, v
+Given a CSV file named "path.csv" with colums t, x, y, v, offx, offy
 
-Timeseries Plot of x vs t:
+Timeseries Plot of v vs t:
 
-	./csv_analyzer.py t x -f path.csv
+	./csv_analyzer.py t v -f path.csv --title "Mouse Speed"
+	
+![](images/mouse_speed.png) 
 	
 Highlight x-axis timestamps where v > 150 and draw x as solid, other lines dotted (psuedo-SQL):
 
-	./csv_analyzer.py t x v -f path.csv --filter "SELECT x WHERE v > 150"
+	./csv_analyzer.py t x v -f path.csv --filter "SELECT x WHERE v > 150"  --title "x WHERE v > 150"
 	
-Highlight x-axis timestamps where v > 150 (numpy where):
+![](images/x_where_v_gt_150.png) 
+	
+Highlight x-axis timestamps where t > 1.5 (numpy where):
 
-	./csv_analyzer.py t x v -f path.csv --filter "numpy.where(numpy.array(dict_data[\"v\"]) > 150)"
+	./csv_analyzer.py t x v -f path.csv --filter "numpy.where(numpy.array(dict_data[\"t\"]) > 1.50)" --title "numpy.where(numpy.array(dict_data[\"t\"]) > 1.50"
+	
+![](images/numpy_where.png) 
 	
 Show a scatter plot of x vs y (path plot):
 
-	./csv_analyzer.py x y -f path.csv --scatter
+	./csv_analyzer.py x y -f path.csv --scatter --title "Path Tracking"
 	
-Generate multiple plots from the same data and load the CSV file only a single time by using --sessionstart and --sessioncontinue. See the example in the "update_plots.sh" script within the test folder for an example. Intermediate calls to the script will load a temporary pickle file to save processing time.
+![](images/path_tracking.png) 
+	
+Compare 2 scatter plots:
 
-###Try It Out
+	./csv_analyzer.py x y offx offy -f path.csv --scatter --title "Path Tracking Compare"
+	
+![](images/path_tracking_compare.png) 
+	
+Generate multiple plots from the same data and load the CSV file only a single time by using the switches "--sessionstart" and "--sessioncontinue" at the first call and subsequent calls, respectively. See the example in the "update_plots.sh" script within the test folder for an example. Intermediate calls to the script will load a temporary pickle file to save processing time.
+
+### Give it a Try
 
 A script to generate path and speed tracking data from your mouse movements exists in the "test" directory: "generate_path_data.py". Use the "duration" switch to vary the duration in seconds to collect CSV data. The default output file name is "path.csv", as used in the above examples. In my testing, 1 minute of data collection will generate around 30-40MB of CSV text data.
 
