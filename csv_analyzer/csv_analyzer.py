@@ -102,7 +102,7 @@ class BigCSVReader:
         return self.data, self.xaxis
 
 class CSVAnalyzer:
-    def __init__(self, columns, xaxis_label, colorbyplot, scatterplot):
+    def __init__(self, columns, xaxis_label, yaxis_label, colorbyplot, scatterplot, hidelegend):
         self.line_cnt = 0
         self.legend_keys = []
         self.color_palette = []
@@ -114,6 +114,8 @@ class CSVAnalyzer:
         self.columns_plot = columns
         self.scatter = scatterplot
         self.xaxis_label = xaxis_label
+        self.yaxis_label = yaxis_label
+        self.hidelegend = hidelegend
 
         self.figure_1 = None
         self.axis_1 = None
@@ -229,7 +231,9 @@ class CSVAnalyzer:
             legend_values = []
             for key in self.legend_keys:
                 legend_values.append(self.dict_lines[key])
-            self.axis_1.legend(legend_values, self.legend_keys)
+            
+            if not self.hidelegend:
+                self.axis_1.legend(legend_values, self.legend_keys)
 
         for region in highlight_region:
             plotter.axvspan(region[0], region[1], color='orange', alpha=0.5)
@@ -392,6 +396,8 @@ class CSVAnalyzer:
         axis.set_ylim(min_y, max_y)
         axis.set_xlim(min_x_axis, max_x_axis)
         axis.set_xlabel(self.xaxis_label)
+        if not self.yaxis_label is None and len(self.yaxis_label) > 0:
+            axis.set_ylabel(self.yaxis_label)
         axis.grid(True)
 
 
@@ -431,6 +437,10 @@ def main():
                         help='Keep plot color scheme consistent by plot order', default=False)
     parser.add_argument('--rawparse', action='store_true',
                         help='Parse CSV files using raw I/O rather than csv module', default=False)
+    parser.add_argument('--hidelegend', action='store_true',
+                        help='Hide the legend', default=False)
+    parser.add_argument('--yaxislabel', '-y', metavar='Y_AXIS_LABEL', type=str,
+                        help='Y axis label', default='')
 
     args = parser.parse_args()
     xaxis_label = ""
@@ -456,7 +466,7 @@ def main():
         columns = args.columns_plot
         if not args.scatter and xaxis_label in columns:
             columns.remove(xaxis_label)
-        analyzer = CSVAnalyzer(columns, xaxis_label, args.colorbyplot, args.scatter)
+        analyzer = CSVAnalyzer(columns, xaxis_label, args.yaxislabel, args.colorbyplot, args.scatter, args.hidelegend)
         analyzer.load_data(args.file, args.rowstart, args.rowend,
                            args.sessioncontinue, args.rawparse)
     except IOError as err:
