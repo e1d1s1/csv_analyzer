@@ -102,7 +102,7 @@ class BigCSVReader:
         return self.data, self.xaxis
 
 class CSVAnalyzer:
-    def __init__(self, columns, xaxis_label, yaxis_label, colorbyplot, scatterplot, hidelegend):
+    def __init__(self, columns, xaxis_label, yaxis_label, colorbyplot, scatterplot, hidelegend, pngfile):
         self.line_cnt = 0
         self.legend_keys = []
         self.color_palette = []
@@ -116,6 +116,7 @@ class CSVAnalyzer:
         self.xaxis_label = xaxis_label
         self.yaxis_label = yaxis_label
         self.hidelegend = hidelegend
+        self.pngfile = pngfile
 
         self.figure_1 = None
         self.axis_1 = None
@@ -238,7 +239,11 @@ class CSVAnalyzer:
         for region in highlight_region:
             plotter.axvspan(region[0], region[1], color='orange', alpha=0.5)
 
-        plotter.show(block=True)
+        if self.pngfile is None or len(self.pngfile) == 0:
+            plotter.show(block=True)
+        else:
+            print('saving png file: ' + self.pngfile)
+            plotter.savefig(self.pngfile)
 
 
     def restore_data(self):
@@ -441,6 +446,8 @@ def main():
                         help='Hide the legend', default=False)
     parser.add_argument('--yaxislabel', '-y', metavar='Y_AXIS_LABEL', type=str,
                         help='Y axis label', default='')
+    parser.add_argument('--png', '-p', type=str,
+                        help='save to PNG instead of showing plot', default='')
 
     args = parser.parse_args()
     xaxis_label = ""
@@ -466,7 +473,7 @@ def main():
         columns = args.columns_plot
         if not args.scatter and xaxis_label in columns:
             columns.remove(xaxis_label)
-        analyzer = CSVAnalyzer(columns, xaxis_label, args.yaxislabel, args.colorbyplot, args.scatter, args.hidelegend)
+        analyzer = CSVAnalyzer(columns, xaxis_label, args.yaxislabel, args.colorbyplot, args.scatter, args.hidelegend, args.png)
         analyzer.load_data(args.file, args.rowstart, args.rowend,
                            args.sessioncontinue, args.rawparse)
     except IOError as err:
