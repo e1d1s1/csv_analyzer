@@ -392,11 +392,19 @@ class CSVAnalyzer:
                 min_y = min(min_y, min(ydata_dict[line_name]))
                 max_y = max(max_y, max(ydata_dict[line_name]))
 
-        if max_y != 0:
-            max_y += 5
+        # Add 5% buffer to y-axis range
+        y_range = max_y - min_y
+        if y_range != 0:
+            buffer_y = y_range * 0.05
+            min_y -= buffer_y
+            max_y += buffer_y
 
-        if min_y != 0:
-            min_y -= 5
+        # Add 5% buffer to x-axis range
+        x_range = max_x_axis - min_x_axis
+        if x_range != 0:
+            buffer_x = x_range * 0.05
+            min_x_axis -= buffer_x
+            max_x_axis += buffer_x
 
         axis.set_ylim(min_y, max_y)
         axis.set_xlim(min_x_axis, max_x_axis)
